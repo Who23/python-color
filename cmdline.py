@@ -2,7 +2,7 @@ import sys, tty, termios, code
 
 old_settings = termios.tcgetattr(sys.stdin)
 tty.setraw(sys.stdin)
-cursorIndex = 0
+cursorIndex = [0, 0]
 line = ""
 i = code.InteractiveInterpreter()
 
@@ -55,21 +55,21 @@ while True:
 
             #right arrow
             if ord(typed) == 67:
-                cursorIndex += 1 if cursorIndex != len(line) else 0
+                cursorIndex[0] += 1 if cursorIndex[0] != len(line) else 0
             #left arrow
             elif ord(typed) == 68:
-                cursorIndex -= 1 if cursorIndex != 0 else 0
+                cursorIndex[0] -= 1 if cursorIndex[0] != 0 else 0
 
         #backspace
         elif typed == 127:
-            if cursorIndex != 0:
-                line = line[:cursorIndex-1] + line[cursorIndex:]
-                cursorIndex -= 1
+            if cursorIndex[0] != 0:
+                line = line[:cursorIndex[0]-1] + line[cursorIndex[0]:]
+                cursorIndex[0] -= 1
 
         #tab
         elif typed == 9:
             line += "    "
-            cursorIndex += 4
+            cursorIndex[0] += 4
             
 
         #enter
@@ -93,11 +93,11 @@ while True:
                     tty.setraw(sys.stdin)
                     line = ""
                     sys.stdout.write("\n\u001b[1B")
-                cursorIndex = 0
+                cursorIndex[0] = 0
 
         else:
             line += chr(typed)
-            cursorIndex += 1
+            cursorIndex[0] += 1
 
         formatted_line = formatLine(line)
         #write out to the terminal, moving cursor as well
@@ -107,8 +107,8 @@ while True:
         if newlinecount:
              sys.stdout.write(f"\u001b[K\u001b[{newlinecount}A")
         print("\u001b[1000D\u001b[K" + formatted_line, end="\r")
-        if cursorIndex:
-            sys.stdout.write(f"\u001b[1000D\u001b[{cursorIndex}C")
+        if cursorIndex[0]:
+            sys.stdout.write(f"\u001b[1000D\u001b[{cursorIndex[0]}C")
         sys.stdout.flush()
         tty.setraw(sys.stdin)
 
