@@ -16,24 +16,32 @@ with open("keywords.txt") as keywordstxt:
 
 def formatLine(line):
     #actually format it with color!
-    line = line.split(" ")
-    for index, word in enumerate(line):
-        for func in builtins:
-            if func in word:
-                temp = word.split(func)
-                temp0 = len(temp[0])
-                temp1 = len(temp[1])
-                
-                #make sure functions are being color coded properly, even if surrounded by 
-                #any parentheses
-                if ((not temp0) or temp[0][-1] in "([{}])") and ((not temp1) or temp[1][0] in "([{}])"):
-                     line[index] = temp[0] + "\u001b[35m" + func + "\u001b[0m" + temp[1]
-                    
-        # if word in builtins:
-        if word in keywords:
-            line[index] = "\u001b[33m" + word + "\u001b[0m"
+    line = line.split('"')
+    for index, lineChunk in enumerate(line):
+        if index % 2 == 0:
+            lineChunk = lineChunk.split(" ")
+            for chunkIndex, word in enumerate(lineChunk):
+                for func in builtins:
+                    if func in word:
+                        temp = word.split(func)
+                        temp0 = len(temp[0])
+                        temp1 = len(temp[1])
+                        
+                        #make sure functions are being color coded properly, even if surrounded by 
+                        #any parentheses
+                        if ((not temp0) or temp[0][-1] in "([{}])") and ((not temp1) or temp[1][0] in "([{}])"):
+                            lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + func + "\u001b[0m" + temp[1]
+                            
+                # if word in builtins:
+                if word in keywords:
+                    lineChunk[chunkIndex] = "\u001b[33m" + word + "\u001b[0m"
+            lineChunk = " ".join(lineChunk)
+        else:
+            lineChunk = "\u001b[32m" + lineChunk + "\u001b[0m"
 
-    line = ' '.join(line).split("\n")
+        line[index] = lineChunk
+
+    line = '"'.join(line).split("\n")
     line[0] = ">>> " + line[0]
     for index, word in enumerate(line[1:]):
         line[index+1] = "... " + word
