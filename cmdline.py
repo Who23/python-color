@@ -1,4 +1,4 @@
-import sys, tty, termios, code
+import sys, tty, termios, code, os
 
 old_settings = termios.tcgetattr(sys.stdin)
 tty.setraw(sys.stdin)
@@ -7,10 +7,10 @@ cursorIndex = [0, 0]
 line = ""
 i = code.InteractiveInterpreter()
 
-with open("builtins.txt") as builtinstxt:
+with open(f'{os.path.dirname(os.path.abspath(__file__))}/builtins.txt') as builtinstxt:
     builtins = [line.rstrip() for line in builtinstxt]
 
-with open("keywords.txt") as keywordstxt:
+with open(f'{os.path.dirname(os.path.abspath(__file__))}/keywords.txt') as keywordstxt:
     keywords = [line.rstrip() for line in keywordstxt]
     
 
