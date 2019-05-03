@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python3 ~/Documents/Python\ Stuff/python-color/cmdline.py
