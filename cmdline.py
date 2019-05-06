@@ -111,7 +111,6 @@ while True:
                     i.runcode(result)
                     tty.setraw(sys.stdin)
                     line = ""
-                    sys.stdout.write("\n\u001b[1B")
                     cursorIndex[1] = 0
                 cursorIndex[0] = 0
 
