@@ -1,3 +1,8 @@
+#TODO: Make single quote strings formatted
+#TODO: Add up and down arrow navigation
+#TODO: Add command history, to do a line again w/ arrow keys
+
+
 import sys, tty, termios, code, os
 
 old_settings = termios.tcgetattr(sys.stdin)
