@@ -1,6 +1,5 @@
 #TODO: Make single quote strings formatted
 #TODO: Add up and down arrow navigation
-#TODO: Add command history, to do a line again w/ arrow keys
 
 
 import sys, tty, termios, code, os
@@ -9,6 +8,10 @@ old_settings = termios.tcgetattr(sys.stdin)
 tty.setraw(sys.stdin)
 #column, row
 cursorIndex = [0, 0]
+prevLines = []
+hasTyped = False
+upArrowOnWhich = 0
+
 line = ""
 i = code.InteractiveInterpreter()
 
@@ -69,9 +72,44 @@ while True:
         #arrow keys
         elif typed == 27:
             _, typed = sys.stdin.read(2)
+            if ord(typed) == 65:
+                #up arrow
 
+                #if the user has not typed anything on the line they are on
+                if not hasTyped:
+                    #increase the command history ref index by 1
+                    upArrowOnWhich += 1 if upArrowOnWhich < len(prevLines) else 0
+
+                    #modify that line to the line in the command history
+                    a = line.split("\n")
+                    a[cursorIndex[1]] = prevLines[-1*upArrowOnWhich]
+                    line = '\n'.join(a)
+
+                    #set the cursor index correctly
+                    cursorIndex[0] = len(prevLines[-1*upArrowOnWhich])
+            elif ord(typed) == 66:
+                #down arrow
+
+                #if we aren't in a new line and the user has not typed anything on the line they're on
+                if line.split("\n")[cursorIndex[1]] != "" and not hasTyped:
+                    #decrease the command history ref index by 1
+                    upArrowOnWhich -= 1 if upArrowOnWhich > 0 else 0
+
+                    #if we aren't back at the fresh line
+                    if upArrowOnWhich != 0:
+                        #modify that line
+                        a = line.split("\n")
+                        a[cursorIndex[1]] = prevLines[-1*upArrowOnWhich]
+                        line = '\n'.join(a)
+
+                        #set the cursor index correctly
+                        cursorIndex[0] = len(prevLines[-1*upArrowOnWhich])
+                    else:
+                        #if it is the fresh line, clear it out
+                        line = ""
+                        cursorIndex[0] = 0
             #right arrow
-            if ord(typed) == 67:
+            elif ord(typed) == 67:
                 cursorIndex[0] += 1 if cursorIndex[0] != len(line) else 0
             #left arrow
             elif ord(typed) == 68:
@@ -92,6 +130,7 @@ while True:
         elif typed == 9:
             line += "    "
             cursorIndex[0] += 4
+            hasTyped = True
             
 
         #enter
@@ -109,19 +148,32 @@ while True:
                 if result == None and result != False:
                     line += "\n"
                     cursorIndex[1] += 1
+                    upArrowOnWhich = 0
                     print()
                 else:
                     sys.stdout.write("\n\u001b[1000D")
                     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
                     i.runcode(result)
                     tty.setraw(sys.stdin)
+                    for miniLine in line.split("\n"):
+                       prevLines.append(miniLine)
                     line = ""
+                    hasTyped = False
+                    upArrowOnWhich = 0
                     cursorIndex[1] = 0
                 cursorIndex[0] = 0
 
         else:
-            line += chr(typed)
+            tempLine = line.split("\n")
+            tempLine1 = tempLine[cursorIndex[1]]
+            tempLine1 = tempLine1[:cursorIndex[0]] + chr(typed) + tempLine1[cursorIndex[0]:]
+            tempLine[cursorIndex[1]] = tempLine1
+            line = "\n".join(tempLine)
+            
             cursorIndex[0] += 1
+
+        if line == "":
+            hasTyped = False
 
         formatted_line = formatLine(line)
         #write out to the terminal, moving cursor as well
