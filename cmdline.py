@@ -155,7 +155,8 @@ while True:
                     i.runcode(result)
                     tty.setraw(sys.stdin)
                     for miniLine in line.split("\n"):
-                       prevLines.append(miniLine)
+                        if miniLine != "":
+                            prevLines.append(miniLine)
                     line = ""
                     hasTyped = False
                     upArrowOnWhich = 0
