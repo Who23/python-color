@@ -61,7 +61,6 @@ def formatLine(line):
 while True:
     try:
         typed = ord(sys.stdin.read(1))
-        #print(typed)
 
         #check for special key presses
         #CTRL+C
@@ -69,6 +68,7 @@ while True:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
             print()
             quit()
+        
         #arrow keys
         elif typed == 27:
             _, typed = sys.stdin.read(2)
@@ -132,7 +132,6 @@ while True:
             cursorIndex[0] += 4
             hasTyped = True
             
-
         #enter
         elif typed == 13:
             try:
@@ -163,6 +162,7 @@ while True:
                     cursorIndex[1] = 0
                 cursorIndex[0] = 0
 
+        #anything else
         else:
             tempLine = line.split("\n")
             tempLine1 = tempLine[cursorIndex[1]]
