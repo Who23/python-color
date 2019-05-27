@@ -1,6 +1,6 @@
 #TODO: Make single quote strings formatted
 #TODO: Add up and down arrow navigation
-
+#TODO: Add more comments
 
 import sys, tty, termios, code, os
 
