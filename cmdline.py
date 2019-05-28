@@ -1,6 +1,5 @@
 #TODO: Make single quote strings formatted
 #TODO: Add up and down arrow navigation
-#TODO: Add more comments
 
 import sys, tty, termios, code, os
 
@@ -15,9 +14,11 @@ upArrowOnWhich = 0
 line = ""
 i = code.InteractiveInterpreter()
 
+#get our builtins to highlight
 with open(f'{os.path.dirname(os.path.abspath(__file__))}/builtins.txt') as builtinstxt:
     builtins = [line.rstrip() for line in builtinstxt]
 
+#get our keywords to highlight
 with open(f'{os.path.dirname(os.path.abspath(__file__))}/keywords.txt') as keywordstxt:
     keywords = [line.rstrip() for line in keywordstxt]
     
@@ -27,29 +28,34 @@ def formatLine(line):
     line = line.split('"')
     for index, lineChunk in enumerate(line):
         if index % 2 == 0:
+            #if we are in a non-string 'chunk'
             lineChunk = lineChunk.split(" ")
             for chunkIndex, word in enumerate(lineChunk):
                 for func in builtins:
                     if func in word:
+                        #if we find the function in the word, split the sentence into before and after
+                        #the function
                         temp = word.split(func)
                         temp0 = len(temp[0])
                         temp1 = len(temp[1])
                         
-                        #make sure functions are being color coded properly, even if surrounded by 
-                        #any parentheses
+                        #If we have chars before/after the function and they're parentheses, color code the function
                         if ((not temp0) or temp[0][-1] in "([{}])") and ((not temp1) or temp[1][0] in "([{}])"):
                             lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + func + "\u001b[0m" + temp[1]
                             
-                # if word in builtins:
+                # highlights keywords in orange
                 if word in keywords:
                     lineChunk[chunkIndex] = "\u001b[33m" + word + "\u001b[0m"
             lineChunk = " ".join(lineChunk)
         else:
+            #color the string section green!
             lineChunk = "\u001b[32m" + lineChunk + "\u001b[0m"
 
         line[index] = lineChunk
 
+    #re-join the line and add the beginning '>>> ' or '... '
     line = '"'.join(line).split("\n")
+
     line[0] = ">>> " + line[0]
     for index, word in enumerate(line[1:]):
         line[index+1] = "... " + word
@@ -72,9 +78,9 @@ while True:
         #arrow keys
         elif typed == 27:
             _, typed = sys.stdin.read(2)
-            if ord(typed) == 65:
-                #up arrow
 
+            #up arrow
+            if ord(typed) == 65:
                 #if the user has not typed anything on the line they are on
                 if not hasTyped:
                     #increase the command history ref index by 1
@@ -87,9 +93,9 @@ while True:
 
                     #set the cursor index correctly
                     cursorIndex[0] = len(prevLines[-1*upArrowOnWhich])
-            elif ord(typed) == 66:
-                #down arrow
 
+            #down arrow
+            elif ord(typed) == 66:
                 #if we aren't in a new line and the user has not typed anything on the line they're on
                 if line.split("\n")[cursorIndex[1]] != "" and not hasTyped:
                     #decrease the command history ref index by 1
@@ -118,6 +124,7 @@ while True:
         #backspace
         elif typed == 127:
             if cursorIndex[0] != 0:
+                #delete the character at the position of the cursor
                 tempLine = line.split("\n")
                 tempLine1 = tempLine[cursorIndex[1]]
                 tempLine1 = tempLine1[:cursorIndex[0]-1] + tempLine1[cursorIndex[0]:]
@@ -135,8 +142,11 @@ while True:
         #enter
         elif typed == 13:
             try:
+                #compile the command
                 result = code.compile_command(line)
             except Exception as e:
+                #if there's an error in the command, it will throw an error
+                #print it out and reset
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
                 print()
                 print(e)
@@ -145,18 +155,24 @@ while True:
                 line = ""
             finally:
                 if result == None and result != False:
+                    #None means that the command isn't finished, and more input is needed
                     line += "\n"
                     cursorIndex[1] += 1
                     upArrowOnWhich = 0
                     print()
                 else:
+                    #if we're good, run the code
                     sys.stdout.write("\n\u001b[1000D")
                     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
                     i.runcode(result)
                     tty.setraw(sys.stdin)
+
+                    #add line to command line history
                     for miniLine in line.split("\n"):
                         if miniLine != "":
                             prevLines.append(miniLine)
+
+                    #reset stuff
                     line = ""
                     hasTyped = False
                     upArrowOnWhich = 0
@@ -166,6 +182,7 @@ while True:
         #anything else
         else:
             tempLine = line.split("\n")
+            #insert the typed character
             tempLine1 = tempLine[cursorIndex[1]]
             tempLine1 = tempLine1[:cursorIndex[0]] + chr(typed) + tempLine1[cursorIndex[0]:]
             tempLine[cursorIndex[1]] = tempLine1
@@ -174,13 +191,16 @@ while True:
             cursorIndex[0] += 1
 
         if line == "":
+            #if we're on a new line, let the user use the command line history
             hasTyped = False
 
         formatted_line = formatLine(line)
-        #write out to the terminal, moving cursor as well
 
+        #write out to the terminal, moving cursor as well
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         newlinecount = line.count("\n")
+
+        #if we have newlines, write them out
         if newlinecount:
             #moves back to first line and cleans each line on the way
             for x in range(newlinecount):
@@ -197,6 +217,6 @@ while True:
     #except any errors and quit nicely
     except Exception as e:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        print("\u001b[31mError in python-color!\u001b[0m")
         print(e)
         quit()
-
