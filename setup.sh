@@ -1,7 +1,18 @@
 #!/bin/bash
 
-cp python-color /usr/local/bin/python-color
-chmod +x /usr/local/bin/python-color
-rm python-color
-rm setup.sh
-mv ../python-color ~/.python-color
+chmod +x ./python-color
+if [[ $2 -eq 1 ]]
+then
+    echo "not removing setup.sh :)"
+else
+    rm setup.sh
+fi
+#mv ../python-color ~/.python-color
+
+pathtest="$(echo $PATH | grep 'python-color')"
+if [[ $pathtest == $PATH ]]
+then
+    echo "python-color has already been installed in PATH"
+else
+    echo 'export PATH="$($HOME/.python-color)"' >> ~/$1
+fi
