@@ -1,6 +1,6 @@
 # python-color
 
-It's python3, but it has syntax highlighting in the REPL!
+It's python3, but it has syntax highlighting in the REPL!!
 
 ## Installation:
 1. Clone the repo wherever you want
