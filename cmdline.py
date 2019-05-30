@@ -1,4 +1,4 @@
-#TODO: Add up and down arrow navigation
+#FIXME: up arrow on first prompt throws error
 
 import sys, tty, termios, code, os
 
@@ -9,6 +9,10 @@ cursorIndex = [0, 0]
 prevLines = []
 hasTyped = False
 upArrowOnWhich = 0
+
+#because of how the printing works, we need to know if we pressed the down arrow
+wentDown = False
+cancelTheUpDownThing = False
 
 line = ""
 i = code.InteractiveInterpreter()
@@ -106,10 +110,15 @@ while True:
 
                     #set the cursor index correctly
                     cursorIndex[0] = len(prevLines[-1*upArrowOnWhich])
+                else:
+                    #move up the cursor unless we're at the top
+                    #print(cursorIndex[1])
+                    cursorIndex[1] -= 1 if cursorIndex[1] != 0 else 0
 
             #down arrow
             elif ord(typed) == 66:
                 #if we aren't in a new line and the user has not typed anything on the line they're on
+                #print(hasTyped)
                 if line.split("\n")[cursorIndex[1]] != "" and not hasTyped:
                     #decrease the command history ref index by 1
                     upArrowOnWhich -= 1 if upArrowOnWhich > 0 else 0
@@ -127,6 +136,11 @@ while True:
                         #if it is the fresh line, clear it out
                         line = ""
                         cursorIndex[0] = 0
+                else:
+                    #moves down the cursor if we aren't at the bottom
+                    if cursorIndex[1] != line.count("\n"):
+                        cursorIndex[1] += 1
+                    wentDown = True
             #right arrow
             elif ord(typed) == 67:
                 cursorIndex[0] += 1 if cursorIndex[0] != len(line) else 0
@@ -171,6 +185,7 @@ while True:
                     #None means that the command isn't finished, and more input is needed
                     line += "\n"
                     cursorIndex[1] += 1
+                    cancelTheUpDownThing = True
                     upArrowOnWhich = 0
                     print()
                 else:
@@ -200,6 +215,7 @@ while True:
             tempLine1 = tempLine1[:cursorIndex[0]] + chr(typed) + tempLine1[cursorIndex[0]:]
             tempLine[cursorIndex[1]] = tempLine1
             line = "\n".join(tempLine)
+            hasTyped = True
             
             cursorIndex[0] += 1
 
@@ -213,17 +229,38 @@ while True:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         newlinecount = line.count("\n")
 
+        #move the cursor to the bottom of the text
+        for x in range(newlinecount - cursorIndex[1]):
+            sys.stdout.write("\u001b[1B")
+        
+        #because we increment cursor index but don't move the cursor til this section
+        #it thinks the cursor is higher up lower than it actually is and doesn't work
+        #so if we moved down this "cycle", move the cursor down one more row
+        #however, don't do it if we've added a newline this "cycle"
+        if wentDown and not cancelTheUpDownThing:
+            sys.stdout.write("\u001b[1B")
+            wentDown = False
+        cancelTheUpDownThing = False
+
+
         #if we have newlines, write them out
         if newlinecount:
             #moves back to first line and cleans each line on the way
             for x in range(newlinecount):
                 sys.stdout.write(f"\r\u001b[K\u001b[1A")
 
+
         #using print instead of sys.stdout.write b/c if @ the botton of the screen
         #it doesn't add a new line and messes everything up
         print("\u001b[1000D\u001b[K" + formatted_line, end="")
+            
+        #move the cursors into their appropriate spots
         if cursorIndex[0]:
             sys.stdout.write(f"\u001b[1000D\u001b[{cursorIndex[0]+4}C")
+        if cursorIndex[1] != newlinecount:
+            upByHowMuch = newlinecount - cursorIndex[1]
+            sys.stdout.write(f"\u001b[{upByHowMuch}A")
+
         sys.stdout.flush()
         tty.setraw(sys.stdin)
 
