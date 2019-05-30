@@ -1,4 +1,3 @@
-#TODO: Make single quote strings formatted
 #TODO: Add up and down arrow navigation
 
 import sys, tty, termios, code, os
@@ -22,39 +21,53 @@ with open(f'{os.path.dirname(os.path.abspath(__file__))}/builtins.txt') as built
 with open(f'{os.path.dirname(os.path.abspath(__file__))}/keywords.txt') as keywordstxt:
     keywords = [line.rstrip() for line in keywordstxt]
     
-
+# For future referece this function is broken down into 3 sections
+# first, we take the line and split the regions seperated by '. This means that
+# every other 'chunk' is a single quote string, which we format green
+# if it's not a single quote string 'chunk', we split it further into regions seperated by ".
+# this does the same thing - every other chunk is a string. For the non-string regions here,
+# we finally format them accordingly by seperating them by spaces and looking for keywords and 
+# builtins to color.
 def formatLine(line):
     #actually format it with color!
-    line = line.split('"')
-    for index, lineChunk in enumerate(line):
-        if index % 2 == 0:
-            #if we are in a non-string 'chunk'
-            lineChunk = lineChunk.split(" ")
-            for chunkIndex, word in enumerate(lineChunk):
-                for func in builtins:
-                    if func in word:
-                        #if we find the function in the word, split the sentence into before and after
-                        #the function
-                        temp = word.split(func)
-                        temp0 = len(temp[0])
-                        temp1 = len(temp[1])
-                        
-                        #If we have chars before/after the function and they're parentheses, color code the function
-                        if ((not temp0) or temp[0][-1] in "([{}])") and ((not temp1) or temp[1][0] in "([{}])"):
-                            lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + func + "\u001b[0m" + temp[1]
-                            
-                # highlights keywords in orange
-                if word in keywords:
-                    lineChunk[chunkIndex] = "\u001b[33m" + word + "\u001b[0m"
-            lineChunk = " ".join(lineChunk)
-        else:
-            #color the string section green!
-            lineChunk = "\u001b[32m" + lineChunk + "\u001b[0m"
+    line = line.split("'")
+    for overIndex, doubleline in enumerate(line):
+        if overIndex % 2 == 0:
+            doubleline = doubleline.split('"')
+            for index, lineChunk in enumerate(doubleline):
+                if index % 2 == 0:
+                    #if we are in a non-string 'chunk'
+                    lineChunk = lineChunk.split(" ")
+                    for chunkIndex, word in enumerate(lineChunk):
+                        for func in builtins:
+                            if func in word:
+                                #if we find the function in the word, split the sentence into before and after
+                                #the function
+                                temp = word.split(func)
+                                temp0 = len(temp[0])
+                                temp1 = len(temp[1])
+                                
+                                #If we have chars before/after the function and they're parentheses, color code the function
+                                if ((not temp0) or temp[0][-1] in "([{}])") and ((not temp1) or temp[1][0] in "([{}])"):
+                                    lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + func + "\u001b[0m" + temp[1]
+                                    
+                        # highlights keywords in orange
+                        if word in keywords:
+                            lineChunk[chunkIndex] = "\u001b[33m" + word + "\u001b[0m"
+                    lineChunk = " ".join(lineChunk)
+                else:
+                    #color the string section green!
+                    lineChunk = "\u001b[32m" + lineChunk + "\u001b[0m"
 
-        line[index] = lineChunk
+                doubleline[index] = lineChunk
+
+            doubleline = '"'.join(doubleline)
+        else:
+            doubleline = "\u001b[32m" + doubleline + "\u001b[0m"
+        line[overIndex] = doubleline
 
     #re-join the line and add the beginning '>>> ' or '... '
-    line = '"'.join(line).split("\n")
+    line = "'".join(line).split("\n")
 
     line[0] = ">>> " + line[0]
     for index, word in enumerate(line[1:]):
@@ -217,6 +230,6 @@ while True:
     #except any errors and quit nicely
     except Exception as e:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-        print("\u001b[31mError in python-color!\u001b[0m")
+        print("\n\u001b[31mError in python-color!\u001b[0m")
         print(e)
         quit()
