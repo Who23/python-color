@@ -1,5 +1,3 @@
-#FIXME: up arrow on first prompt throws error
-
 import sys, tty, termios, code, os
 
 old_settings = termios.tcgetattr(sys.stdin)
@@ -101,15 +99,16 @@ while True:
                 #if the user has not typed anything on the line they are on
                 if not hasTyped:
                     #increase the command history ref index by 1
-                    upArrowOnWhich += 1 if upArrowOnWhich < len(prevLines) else 0
+                    if upArrowOnWhich < len(prevLines):
+                        upArrowOnWhich += 1
 
-                    #modify that line to the line in the command history
-                    a = line.split("\n")
-                    a[cursorIndex[1]] = prevLines[-1*upArrowOnWhich]
-                    line = '\n'.join(a)
+                        #modify that line to the line in the command history
+                        a = line.split("\n")
+                        a[cursorIndex[1]] = prevLines[-1*upArrowOnWhich]
+                        line = '\n'.join(a)
 
-                    #set the cursor index correctly
-                    cursorIndex[0] = len(prevLines[-1*upArrowOnWhich])
+                        #set the cursor index correctly
+                        cursorIndex[0] = len(prevLines[-1*upArrowOnWhich])
                 else:
                     #move up the cursor unless we're at the top
                     #print(cursorIndex[1])
