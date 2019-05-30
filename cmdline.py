@@ -78,7 +78,8 @@ def formatLine(line):
         
     return line
 
-
+sys.stdout.write(">>> ")
+sys.stdout.flush()
 while True:
     try:
         typed = ord(sys.stdin.read(1))
