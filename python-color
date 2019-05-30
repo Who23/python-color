@@ -24,5 +24,7 @@ else
         else
             echo -e "\033[31mUpdate failed\033[0m" 
         fi
+    else
+        python3 $1
     fi
 fi
