@@ -7,12 +7,22 @@ else
     then
         printf "Are you sure you want to uninstall python-color? (y/n): "
         read shouldUninstall
-        if [ $shouldUninstall == "y" ]
+        if [[ $shouldUninstall == "y" ]]
         then
             echo "Uninstalling..."
             rm ../.python-color
             echo -e "\033[31m\033[1mpython-color has been uninstalled\033[0m"
             echo -e "\033[31m\033[1mPlease remember to remove the python-color from your PATH\033[0m"
+        fi
+    elif [ $1 == "update" ]
+    then
+        echo "Attempting update..."
+        git pull
+        if [[ $? -eq 0 ]]
+        then   
+            echo -e "\033[32mUpdate sucessful\033[0m"
+        else
+            echo -e "\033[31mUpdate failed\033[0m" 
         fi
     fi
 fi
