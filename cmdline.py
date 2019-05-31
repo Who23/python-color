@@ -8,10 +8,6 @@ prevLines = []
 hasTyped = False
 upArrowOnWhich = 0
 
-#because of how the printing works, we need to know if we pressed the down arrow
-wentDown = False
-cancelTheUpDownThing = False
-
 line = ""
 i = code.InteractiveInterpreter()
 
@@ -113,7 +109,9 @@ while True:
                 else:
                     #move up the cursor unless we're at the top
                     #print(cursorIndex[1])
-                    cursorIndex[1] -= 1 if cursorIndex[1] != 0 else 0
+                    if cursorIndex[1] > 0:
+                        cursorIndex[1] -= 1
+                        sys.stdout.write("\u001b[1A")
 
             #down arrow
             elif ord(typed) == 66:
@@ -140,7 +138,8 @@ while True:
                     #moves down the cursor if we aren't at the bottom
                     if cursorIndex[1] != line.count("\n"):
                         cursorIndex[1] += 1
-                    wentDown = True
+                        sys.stdout.write("\u001b[1B")
+
             #right arrow
             elif ord(typed) == 67:
                 cursorIndex[0] += 1 if cursorIndex[0] != len(line) else 0
@@ -185,7 +184,6 @@ while True:
                     #None means that the command isn't finished, and more input is needed
                     line += "\n"
                     cursorIndex[1] += 1
-                    cancelTheUpDownThing = True
                     upArrowOnWhich = 0
                     print()
                 else:
@@ -233,15 +231,6 @@ while True:
         for x in range(newlinecount - cursorIndex[1]):
             sys.stdout.write("\u001b[1B")
         
-        #because we increment cursor index but don't move the cursor til this section
-        #it thinks the cursor is higher up lower than it actually is and doesn't work
-        #so if we moved down this "cycle", move the cursor down one more row
-        #however, don't do it if we've added a newline this "cycle"
-        if wentDown and not cancelTheUpDownThing:
-            sys.stdout.write("\u001b[1B")
-            wentDown = False
-        cancelTheUpDownThing = False
-
 
         #if we have newlines, write them out
         if newlinecount:
@@ -260,6 +249,7 @@ while True:
         if cursorIndex[1] != newlinecount:
             upByHowMuch = newlinecount - cursorIndex[1]
             sys.stdout.write(f"\u001b[{upByHowMuch}A")
+    
 
         sys.stdout.flush()
         tty.setraw(sys.stdin)
