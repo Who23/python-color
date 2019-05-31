@@ -3,9 +3,11 @@
 chmod +x ./python-color
 if [[ $2 -eq 1 ]]
 then
-    echo "not removing setup.sh :)"
+    echo "not removing files for dev :)"
 else
     rm ./setup.sh
+    rm ./disp2.png
+    rm ./README.md
 fi
 
 mv ../python-color ~/.python-color
