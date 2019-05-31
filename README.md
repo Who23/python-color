@@ -2,6 +2,8 @@
 
 It's python3, but it has syntax highlighting in the REPL!!
 
+![](https://raw.githubusercontent.com/Who23/python-color/sync/disp2.png)
+
 ## Installation:
 1. Clone the repo with `git clone --single-branch https://github.com/Who23/python-color.git`
 (Please make sure the directory is called `python-color`!)
