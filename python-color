@@ -17,7 +17,7 @@ else
     elif [ $1 == "update" ]
     then
         echo "Attempting update..."
-        git pull
+        git -C ~/.python-color pull
         if [[ $? -eq 0 ]]
         then   
             echo -e "\033[32mUpdate sucessful\033[0m"
