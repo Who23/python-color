@@ -19,25 +19,27 @@ with open(f'{os.path.dirname(os.path.abspath(__file__))}/builtins.txt') as built
 with open(f'{os.path.dirname(os.path.abspath(__file__))}/keywords.txt') as keywordstxt:
     keywords = [line.rstrip() for line in keywordstxt]
     
-# For future referece this function is broken down into 3 sections
-# first, we take the line and split the regions seperated by '. This means that
-# every other 'chunk' is a single quote string, which we format green
-# if it's not a single quote string 'chunk', we split it further into regions seperated by ".
-# this does the same thing - every other chunk is a string. For the non-string regions here,
-# we finally format them accordingly by seperating them by spaces and looking for keywords and 
-# builtins to color.
+
+# Scan for single quoted strings
+# Outside single strings, scan for double strings
+# Outside double quoted strings, scan for keywords and builtins
+# Highlight Appropriately
 def formatLine(line):
     #actually format it with color!
     line = line.split("'")
     for overIndex, doubleline in enumerate(line):
         if overIndex % 2 == 0:
+
             doubleline = doubleline.split('"')
             for index, lineChunk in enumerate(doubleline):
+
                 if index % 2 == 0:
                     #if we are in a non-string 'chunk'
                     lineChunk = lineChunk.split(" ")
                     for chunkIndex, word in enumerate(lineChunk):
-                        for func in builtins:
+
+                        for func, keyword in zip(builtins, keywords):
+
                             if func in word:
                                 #if we find the function in the word, split the sentence into before and after
                                 #the function
@@ -46,13 +48,15 @@ def formatLine(line):
                                 temp1 = len(temp[1])
                                 
                                 #If we have chars before/after the function and they're parentheses, color code the function
-                                if ((not temp0) or temp[0][-1] in "([{}])") and ((not temp1) or temp[1][0] in "([{}])"):
-                                    lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + func + "\u001b[0m" + temp[1]
-                                    
-                        # highlights keywords in orange
-                        if word in keywords:
-                            lineChunk[chunkIndex] = "\u001b[33m" + word + "\u001b[0m"
+                                if ((not temp0) or temp[0][-1] in "([{:}])") and ((not temp1) or temp[1][0] in "([{:}])"):
+                                    if func in word:
+                                        lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + func + "\u001b[0m" + temp[1]
+                                    else:
+                                        lineChunk[chunkIndex] = temp[0] + "\u001b[33m" + keyword + "\u001b[0m" + temp[1]
+
+
                     lineChunk = " ".join(lineChunk)
+
                 else:
                     #color the string section green!
                     lineChunk = "\u001b[32m" + lineChunk + "\u001b[0m"
@@ -102,10 +106,9 @@ while True:
                         #modify that line to the line in the command history
                         a = line.split("\n")
                         a[cursorIndex[1]] = prevLines[-1*upArrowOnWhich]
+                        cursorIndex[0] = len(prevLines[-1*upArrowOnWhich])
                         line = '\n'.join(a)
 
-                        #set the cursor index correctly
-                        cursorIndex[0] = len(prevLines[-1*upArrowOnWhich])
                 else:
                     #move up the cursor unless we're at the top
                     #print(cursorIndex[1])
@@ -142,10 +145,13 @@ while True:
 
             #right arrow
             elif ord(typed) == 67:
-                cursorIndex[0] += 1 if cursorIndex[0] != len(line) else 0
+                cursorIndex[0] += 1 if cursorIndex[0] != len(line.split("\n")[cursorIndex[1]]) else 0
+                hasTyped = True if cursorIndex[0] != len(line.split("\n")[cursorIndex[1]]) else False
+
             #left arrow
             elif ord(typed) == 68:
                 cursorIndex[0] -= 1 if cursorIndex[0] != 0 else 0
+                hasTyped = True
 
         #backspace
         elif typed == 127:
@@ -158,6 +164,7 @@ while True:
                 line = "\n".join(tempLine)
                 
                 cursorIndex[0] -= 1
+                hasTyped = True
 
         #tab
         elif typed == 9:
@@ -221,9 +228,11 @@ while True:
             #if we're on a new line, let the user use the command line history
             hasTyped = False
 
+
+
         formatted_line = formatLine(line)
 
-        #write out to the terminal, moving cursor as well
+        ## write out to the terminal, moving cursor as well ##
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         newlinecount = line.count("\n")
 
@@ -236,19 +245,19 @@ while True:
         if newlinecount:
             #moves back to first line and cleans each line on the way
             for x in range(newlinecount):
-                sys.stdout.write(f"\r\u001b[K\u001b[1A")
+                sys.stdout.write("\r\u001b[K\u001b[1A")
 
 
         #using print instead of sys.stdout.write b/c if @ the botton of the screen
         #it doesn't add a new line and messes everything up
-        print("\u001b[1000D\u001b[K" + formatted_line, end="")
+        print("\u001b[1000D\u001b[K" + formatted_line + "\u001b[1000D\u001b[4C", end="")
             
         #move the cursors into their appropriate spots
-        if cursorIndex[0]:
-            sys.stdout.write(f"\u001b[1000D\u001b[{cursorIndex[0]+4}C")
         if cursorIndex[1] != newlinecount:
             upByHowMuch = newlinecount - cursorIndex[1]
             sys.stdout.write(f"\u001b[{upByHowMuch}A")
+        if cursorIndex[0]:
+            sys.stdout.write(f"\u001b[{cursorIndex[0]}C")
     
 
         sys.stdout.flush()
