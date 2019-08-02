@@ -78,8 +78,12 @@ def formatLine(line):
         
     return line
 
+vi = sys.version_info
+pcolorString = "\u001b[1m\u001b[31mc\u001b[33mo\u001b[32ml\u001b[34mo\u001b[35mr\u001b[0m"
+sys.stdout.write(f"::: Python {vi[0]}.{vi[1]}.{vi[2]} || {pcolorString} #{sys.argv[1]} :::\u001b[0m\n\r")
 sys.stdout.write(">>> ")
 sys.stdout.flush()
+
 while True:
     try:
         typed = ord(sys.stdin.read(1))
