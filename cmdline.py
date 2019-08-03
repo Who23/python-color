@@ -38,21 +38,21 @@ def formatLine(line):
                     lineChunk = lineChunk.split(" ")
                     for chunkIndex, word in enumerate(lineChunk):
 
-                        for func, keyword in zip(builtins, keywords):
+                        for highlight in (builtins + keywords):
 
-                            if func in word:
+                            if highlight in word:
                                 #if we find the function in the word, split the sentence into before and after
                                 #the function
-                                temp = word.split(func)
+                                temp = word.split(highlight)
                                 temp0 = len(temp[0])
                                 temp1 = len(temp[1])
                                 
                                 #If we have chars before/after the function and they're parentheses, color code the function
                                 if ((not temp0) or temp[0][-1] in "([{:}])") and ((not temp1) or temp[1][0] in "([{:}])"):
-                                    if func in word:
-                                        lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + func + "\u001b[0m" + temp[1]
+                                    if highlight in builtins:
+                                        lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + highlight + "\u001b[0m" + temp[1]
                                     else:
-                                        lineChunk[chunkIndex] = temp[0] + "\u001b[33m" + keyword + "\u001b[0m" + temp[1]
+                                        lineChunk[chunkIndex] = temp[0] + "\u001b[33m" + highlight + "\u001b[0m" + temp[1]
 
 
                     lineChunk = " ".join(lineChunk)
