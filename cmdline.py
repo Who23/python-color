@@ -159,6 +159,12 @@ while True:
                 print()
                 print(e)
                 tty.setraw(sys.stdin)
+
+                # add line to command line history
+                for miniLine in line.split("\n"):
+                    if miniLine != "":
+                        prevLines.append(miniLine)
+                        
                 result = False
                 line = ""
             finally:
