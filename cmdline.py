@@ -1,4 +1,4 @@
-import sys, tty, termios, code, os
+import sys, tty, termios, code, os, re
 
 old_settings = termios.tcgetattr(sys.stdin)
 tty.setraw(sys.stdin)
@@ -20,56 +20,25 @@ with open(f'{os.path.dirname(os.path.abspath(__file__))}/keywords.txt') as keywo
     keywords = [line.rstrip() for line in keywordstxt]
     
 
-# Scan for single quoted strings
-# Outside single strings, scan for double strings
-# Outside double quoted strings, scan for keywords and builtins
-# Highlight Appropriately
+# regexes for highlighting
+strreg = r'''((".+?")|(".+"?))|(('.+?')|('.+'?))'''
+builtinsreg = r"\b(" + r''.join(f"({x})|" for x in builtins)[:-1] + r")\b"
+keywordsreg = r"\b(" + r''.join(f"({x})|" for x in keywords)[:-1] + r")\b"
+colorString = r'\u001b\[3(3|5)m.*?\u001b\[0m'
+
 def formatLine(line):
-    #actually format it with color!
-    line = line.split("'")
-    for overIndex, doubleline in enumerate(line):
-        if overIndex % 2 == 0:
+    # highlight all keywords and builtins
+    line = re.sub(builtinsreg, lambda match : "\u001b[35m" + match.group(0) + "\u001b[0m", line)
+    line = re.sub(keywordsreg, lambda match : "\u001b[33m" + match.group(0) + "\u001b[0m", line)
 
-            doubleline = doubleline.split('"')
-            for index, lineChunk in enumerate(doubleline):
+    # highlight all strings green, and unhighlight any keyword or builtin in the string
+    line = re.sub(strreg, 
+        lambda match : "\u001b[32m" + 
+        re.sub(colorString, lambda m : m.group(0).strip('\u001b[1234567890m'), match.group(0)) + \
+        "\u001b[0m", line)
 
-                if index % 2 == 0:
-                    #if we are in a non-string 'chunk'
-                    lineChunk = lineChunk.split(" ")
-                    for chunkIndex, word in enumerate(lineChunk):
-
-                        for highlight in (builtins + keywords):
-
-                            if highlight in word:
-                                #if we find the function in the word, split the sentence into before and after
-                                #the function
-                                temp = word.split(highlight)
-                                temp0 = len(temp[0])
-                                temp1 = len(temp[1])
-                                
-                                #If we have chars before/after the function and they're parentheses, color code the function
-                                if ((not temp0) or temp[0][-1] in "([{:}])") and ((not temp1) or temp[1][0] in "([{:}])"):
-                                    if highlight in builtins:
-                                        lineChunk[chunkIndex] = temp[0] + "\u001b[35m" + highlight + "\u001b[0m" + temp[1]
-                                    else:
-                                        lineChunk[chunkIndex] = temp[0] + "\u001b[33m" + highlight + "\u001b[0m" + temp[1]
-
-
-                    lineChunk = " ".join(lineChunk)
-
-                else:
-                    #color the string section green!
-                    lineChunk = "\u001b[32m" + lineChunk + "\u001b[0m"
-
-                doubleline[index] = lineChunk
-
-            doubleline = '"'.join(doubleline)
-        else:
-            doubleline = "\u001b[32m" + doubleline + "\u001b[0m"
-        line[overIndex] = doubleline
-
-    #re-join the line and add the beginning '>>> ' or '... '
-    line = "'".join(line).split("\n")
+    # add the beginning '>>> ' or '... '
+    line = line.split("\n")
 
     line[0] = ">>> " + line[0]
     for index, word in enumerate(line[1:]):
@@ -77,7 +46,9 @@ def formatLine(line):
     line = '\n'.join(line)
         
     return line
-
+    
+    
+# print python3 vesion and python-color commit
 vi = sys.version_info
 pcolorString = "\u001b[1m\u001b[31mc\u001b[33mo\u001b[32ml\u001b[34mo\u001b[35mr\u001b[0m"
 sys.stdout.write(f"::: Python {vi[0]}.{vi[1]}.{vi[2]} || {pcolorString} #{sys.argv[1]} :::\u001b[0m\n\r")
